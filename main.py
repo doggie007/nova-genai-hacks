@@ -43,7 +43,7 @@ if not st.session_state.button_triggered:
     st.markdown("<p class='custom-label'>Attach a photo of your room or mood board below</p>", unsafe_allow_html=True)
     upload_supplemental = st.file_uploader("", type=["jpeg", "png"])
 
-    if upload_supplemental and uploaded_main_recording:
+    if upload_supplemental or uploaded_main_recording:
         if st.button("Submit"):
             st.session_state.button_triggered = True
 
