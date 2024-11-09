@@ -42,3 +42,4 @@ def gui():
         st.empty()
         st.title("Thank you for submitting your information, we will match you shortly.")
         #tells the user we got their data from the shit
+    return None
