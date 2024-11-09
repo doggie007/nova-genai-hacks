@@ -1,18 +1,19 @@
 from langchain_openai import ChatOpenAI
 import streamlit as st
 
+def submissionPage(submit1, submit2): #returns a tuple of the (record, video)
+        #we might need to analyze data here, not super sure. R
+        st.session_state.button_triggered = True
+        return (submit1, submit2)
+
 def gui():
     
-    # Initialize session state
+    
+    #initial state
     if 'button_triggered' not in st.session_state:
         st.session_state.button_triggered = False
 
-    def submissionPage(submit1, submit2):
-        #run shit from the data
-        st.session_state.button_triggered = True
-        return [submit1, submit2]
-
-    # Main app logic
+    #app logic
     if not st.session_state.button_triggered:
         st.title("Roommate Matching")
         st.write("Description: Looking for a roommate? Our platform helps match you with compatible living partners based on your video introduction, lifestyle preferences, and living space photos. Upload a short video about yourself and photos of your room to get started with finding a suitable roommate match.")
@@ -39,6 +40,5 @@ def gui():
 
     else:
         st.empty()
-        st.write("Thank you for submitting your information, we will match you shortly.")
-        # Here you can add your analysis code for the uploaded files
-        # The files can be accessed through st.session_state
+        st.title("Thank you for submitting your information, we will match you shortly.")
+        #tells the user we got their data from the shit
