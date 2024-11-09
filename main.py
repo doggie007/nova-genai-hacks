@@ -9,6 +9,12 @@ TEAM_API_KEY = environ.get('TEAM_API_KEY')
 PROXY_ENDPOINT = environ.get('PROXY_ENDPOINT')
 CARTESIA_KEY = environ.get('CARTESIA_KEY')
 
+from openai import OpenAI
+client = OpenAI(
+    api_key=TEAM_API_KEY,
+    base_url=PROXY_ENDPOINT
+)
+
 # path_of_voice: mp3 file of the voice to clone
 # returns voice embedding (vector)
 def clone_voice(path_of_voice):
@@ -27,6 +33,14 @@ def clone_voice(path_of_voice):
     response = requests.post(url, headers=headers, files=files, data=data)
 
     return response.json()['embedding']
+
+def transcribe(path_of_voice):
+    audio_file= open(path_of_voice, "rb")
+    transcription = client.audio.transcriptions.create(
+        model="whisper-1", 
+        file=audio_file
+    )
+    return transcription.text
 
 # embedding: embedding of the voice
 # transcript: the thing you want to say
