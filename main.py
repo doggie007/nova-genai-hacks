@@ -9,44 +9,50 @@ TEAM_API_KEY = environ.get('TEAM_API_KEY')
 PROXY_ENDPOINT = environ.get('PROXY_ENDPOINT')
 CARTESIA_KEY = environ.get('CARTESIA_KEY')
 
-url = "https://api.cartesia.ai/voices/clone/clip"
-headers = {
-    "X-API-Key": CARTESIA_KEY, 
-    "Cartesia-Version": "2024-06-10",
-}
+# path_of_voice: mp3 file of the voice to clone
+# returns voice embedding (vector)
+def clone_voice(path_of_voice):
+    url = "https://api.cartesia.ai/voices/clone/clip"
+    headers = {
+        "X-API-Key": CARTESIA_KEY, 
+        "Cartesia-Version": "2024-06-10",
+    }
 
-files = {
-    'clip': ('jose.mp3', open('jose.mp3', 'rb'), 'audio/mpeg'),
-}
-data = {
-    'enhance': 'true'
-}
-response = requests.post(url, headers=headers, files=files, data=data)
+    files = {
+        'clip': (path_of_voice, open(path_of_voice, 'rb'), 'audio/mpeg'),
+    }
+    data = {
+        'enhance': 'true'
+    }
+    response = requests.post(url, headers=headers, files=files, data=data)
 
-vector = response.json()['embedding']
-transcript = 'I love Hamza, I love James, I love William'
+    return response.json()['embedding']
 
-response = requests.post(
-  "https://api.cartesia.ai/tts/bytes",
-  headers={
-    "X-API-Key": CARTESIA_KEY,
-    "Cartesia-Version": "2024-06-10",
-    "Content-Type": "application/json"
-  },
-  json={
-    "model_id": "sonic-english",
-    "transcript": transcript,
-    "voice": {
-      "mode": "embedding",
-      "embedding": vector
-    },
-    "output_format": {
-      "container": "mp3",
-      "bit_rate": 128000,
-      "sample_rate": 44100
-    },
-    "language": "en"
-  },
-)
+# embedding: embedding of the voice
+# transcript: the thing you want to say
+# returns: the binary of the wav file
+def speak(embedding, transcript):
+    url = "https://api.cartesia.ai/tts/bytes"
+    headers = {
+        "X-API-Key": CARTESIA_KEY,
+        "Cartesia-Version": "2024-06-10",
+        "Content-Type": "application/json"
+    }
 
-print(response)
+    payload = {
+        "model_id": "sonic-english",
+        "transcript": transcript,
+        "voice": {
+            "mode": "embedding",
+            "embedding": embedding
+        },
+        "output_format": {
+            "container": "wav",
+            "encoding": "pcm_f32le",
+            "sample_rate": 44100
+            },
+        "language": "en"
+    }
+
+    response = requests.post(url, headers=headers, data=json.dumps(payload))
+    return response.content
