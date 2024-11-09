@@ -5,7 +5,7 @@ from os import environ
 import requests
 import json
 from io import BytesIO
-from pydub import AudioSegment
+import numpy as np
 
 TEAM_API_KEY = environ.get('TEAM_API_KEY')
 PROXY_ENDPOINT = environ.get('PROXY_ENDPOINT')

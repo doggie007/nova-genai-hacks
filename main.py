@@ -4,6 +4,7 @@ from os import environ, listdir
 
 from langchain_community.chat_message_histories import ChatMessageHistory
 from langchain_openai.chat_models import ChatOpenAI
+from langchain_core.messages import HumanMessage
 
 from voice import clone_voice, transcribe, speak
 
@@ -53,15 +54,20 @@ if st.session_state.button_triggered:
     embedding = selected_data['embedding']
     bio = selected_data['bio']
 
+    # Display all previous chat messages
+    for message in st.session_state.messages.messages:
+        role = 'user' if isinstance(message, HumanMessage) else 'assistant'
+        with st.chat_message(role):
+            st.markdown(message.content)
+
     if prompt := st.chat_input('Your message', key='prompt'):
-        st.chat_message('user').markdown(prompt)
         st.session_state.messages.add_user_message(prompt)
+        st.chat_message('user').markdown(prompt)
 
         response = llm.invoke(prompt).content
-        audio_bytes = speak(embedding, response)
-
-        with st.chat_message('assistant'):
-            st.audio(audio_bytes, format="audio/wav", autoplay=True) 
-        
         st.session_state.messages.add_ai_message(response)
+        
+        with st.chat_message('assistant'):
+            st.audio(speak(embedding, response), format="audio/wav", autoplay=True)
+        
         sleep(0.5)
