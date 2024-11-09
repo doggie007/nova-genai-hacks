@@ -8,31 +8,31 @@ from langchain_core.messages import HumanMessage
 
 from voice import clone_voice, transcribe, speak
 
+from chat import PersonaGPT, get_response
+
 TEAM_API_KEY=environ.get('TEAM_API_KEY')
 PROXY_ENDPOINT=environ.get('PROXY_ENDPOINT')
 CARTESIA_KEY=environ.get('CARTESIA_KEY')
 
 
+if 'persona' not in st.session_state:
+    st.session_state.persona = None
 # Initialize session states
 if 'messages' not in st.session_state:
-    st.session_state.messages = ChatMessageHistory()
+    st.session_state.messages = []
+    st.session_state.history = ChatMessageHistory()
 if 'button_triggered' not in st.session_state:
     st.session_state.button_triggered = False
 if 'names' not in st.session_state:
     names = {}
     for file in listdir('dummy_data'):
-        name = file[:-4]
-        names[name] = {
-            'embedding': clone_voice(file),
-            'bio': transcribe(file)
-        }
+        if file != 'persona.mp3':
+            name = file[:-4]
+            names[name] = {
+                'embedding': clone_voice(file),
+                'bio': transcribe(file)
+            }
     st.session_state.names = names
-
-llm = ChatOpenAI(
-    openai_api_key=TEAM_API_KEY, 
-    openai_api_base=PROXY_ENDPOINT,
-    model="gpt-4o"
-)
 
 if not st.session_state.button_triggered:
     st.title("Roommate Matching")
@@ -40,6 +40,10 @@ if not st.session_state.button_triggered:
     
     st.markdown("<p class='custom-label'>Record a 20-30 second bio about yourself and attach it below</p>", unsafe_allow_html=True)
     uploaded_main_recording = st.audio_input('Start recording')
+    if uploaded_main_recording is not None:
+        with open('dummy_data/persona.mp3', 'wb') as f:
+            f.write(uploaded_main_recording.getvalue())
+        st.session_state.persona = PersonaGPT(transcribe('persona.mp3'))
 
     st.markdown("<p class='custom-label'>Attach a photo of your room or mood board below</p>", unsafe_allow_html=True)
     upload_supplemental = st.file_uploader("", type=["jpeg", "png"])
@@ -55,19 +59,20 @@ if st.session_state.button_triggered:
     bio = selected_data['bio']
 
     # Display all previous chat messages
-    for message in st.session_state.messages.messages:
+    for message in st.session_state.history.messages:
         role = 'user' if isinstance(message, HumanMessage) else 'assistant'
         with st.chat_message(role):
             st.markdown(message.content)
 
     if prompt := st.chat_input('Your message', key='prompt'):
-        st.session_state.messages.add_user_message(prompt)
         st.chat_message('user').markdown(prompt)
+        st.session_state.history.add_user_message(prompt)
 
-        response = llm.invoke(prompt).content
-        st.session_state.messages.add_ai_message(response)
+        response = get_response(st.session_state.persona.gpt_instruction, st.session_state.messages, prompt, st.session_state.persona.frequency_penalty, None)
+        st.session_state.messages.append((prompt, response))
         
         with st.chat_message('assistant'):
             st.audio(speak(embedding, response), format="audio/wav", autoplay=True)
         
+        st.session_state.history.add_ai_message(response)
         sleep(0.5)
