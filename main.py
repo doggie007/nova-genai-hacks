@@ -23,5 +23,30 @@ data = {
 }
 response = requests.post(url, headers=headers, files=files, data=data)
 
-print(response.status_code)
-print(response.json())
+vector = response.json()['embedding']
+transcript = 'I love Hamza, I love James, I love William'
+
+response = requests.post(
+  "https://api.cartesia.ai/tts/bytes",
+  headers={
+    "X-API-Key": CARTESIA_KEY,
+    "Cartesia-Version": "2024-06-10",
+    "Content-Type": "application/json"
+  },
+  json={
+    "model_id": "sonic-english",
+    "transcript": transcript,
+    "voice": {
+      "mode": "embedding",
+      "embedding": vector
+    },
+    "output_format": {
+      "container": "mp3",
+      "bit_rate": 128000,
+      "sample_rate": 44100
+    },
+    "language": "en"
+  },
+)
+
+print(response)
