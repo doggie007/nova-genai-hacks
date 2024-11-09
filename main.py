@@ -7,9 +7,28 @@ llm = ChatOpenAI(
     model="gpt-4o"
 )
 
-template = """Generate a kids story based on this prompt: {query}"""
+template = """
+We recorded conversations of a bunch of people with their best friends. Here are their transcriptions:
 
-prompt = template.format(query='My sons dad was in jail. Write a story to make sure he doesnt end like him')
+John: ....
+
+Hamza: ....
+
+William: ....
+
+James: ....
+
+Here is our transcription:
+{transcription}
+
+Based on our transcription, return the top 3 people that would seem most compatible for rooming. Base on the following guidelines:
+- Tone of voice
+- Personality
+- Interests
+- Liveliness
+"""
+
+prompt = template.format(transcription='blah blah')
 
 response = llm.invoke(prompt)
 
