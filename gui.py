@@ -6,7 +6,7 @@ def submissionPage(submit1, submit2): #returns a tuple of the (record, video)
         st.session_state.button_triggered = True
         return (submit1, submit2)
 
-def gui():
+def gui(dummyDropDowns):
     
     
     #initial state
@@ -40,6 +40,8 @@ def gui():
 
     else:
         st.empty()
-        st.title("Thank you for submitting your information, we will match you shortly.")
+        st.title("Thank you for submitting your information, these are your best matches")
+        for clip in dummyDropDowns:
+            st.audio(clip, format = "audio/wav")
         #tells the user we got their data from the shit
     return None
