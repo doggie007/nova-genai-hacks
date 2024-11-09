@@ -17,7 +17,8 @@ client = OpenAI(
 
 # path_of_voice: mp3 file of the voice to clone
 # returns voice embedding (vector)
-def clone_voice(path_of_voice):
+def clone_voice(path):
+    path_of_voice = 'dummy_data/' + path
     url = "https://api.cartesia.ai/voices/clone/clip"
     headers = {
         "X-API-Key": CARTESIA_KEY, 
@@ -34,7 +35,8 @@ def clone_voice(path_of_voice):
 
     return response.json()['embedding']
 
-def transcribe(path_of_voice):
+def transcribe(path):
+    path_of_voice = 'dummy_data/' + path
     audio_file= open(path_of_voice, "rb")
     transcription = client.audio.transcriptions.create(
         model="whisper-1", 
