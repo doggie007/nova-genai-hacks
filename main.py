@@ -1,13 +1,15 @@
 import streamlit as st
 from time import time, sleep
 from os import environ, listdir
-import random
 
 from langchain_community.chat_message_histories import ChatMessageHistory
-from langchain_core.messages import HumanMessage
 from langchain_openai.chat_models import ChatOpenAI
 
 from voice import clone_voice, transcribe, speak
+
+TEAM_API_KEY=environ.get('TEAM_API_KEY')
+PROXY_ENDPOINT=environ.get('PROXY_ENDPOINT')
+CARTESIA_KEY=environ.get('CARTESIA_KEY')
 
 
 # Initialize session states
@@ -26,8 +28,8 @@ if 'names' not in st.session_state:
     st.session_state.names = names
 
 llm = ChatOpenAI(
-    openai_api_key="sk-1-nnzryEbytTnAqTcIyH7Q", 
-    openai_api_base="https://nova-litellm-proxy.onrender.com",
+    openai_api_key=TEAM_API_KEY, 
+    openai_api_base=PROXY_ENDPOINT,
     model="gpt-4o"
 )
 
@@ -56,11 +58,11 @@ if st.session_state.button_triggered:
         st.chat_message('user').markdown(prompt)
         st.session_state.messages.add_user_message(prompt)
 
-        response = llm.invoke(prompt).content
-        audio_bytes = speak(embedding, response)
+        #response = llm.invoke(prompt).content
+        audio_bytes = speak(embedding, 'Yeah my name is Jose, how are you doing today?? Id love to room with you')
 
         with st.chat_message('assistant'):
-            st.audio(audio_bytes, autoplay=True)
+            st.audio(audio_bytes, format="audio/wav", autoplay=True) 
         
-        st.session_state.messages.add_ai_message(response)
+        #st.session_state.messages.add_ai_message(response)
         sleep(0.5)

@@ -4,6 +4,8 @@ load_dotenv()
 from os import environ
 import requests
 import json
+from io import BytesIO
+from pydub import AudioSegment
 
 TEAM_API_KEY = environ.get('TEAM_API_KEY')
 PROXY_ENDPOINT = environ.get('PROXY_ENDPOINT')
@@ -71,4 +73,8 @@ def speak(embedding, transcript):
     }
 
     response = requests.post(url, headers=headers, data=json.dumps(payload))
-    return response.content
+    audio_segment = AudioSegment.from_file(BytesIO(response.content), format="wav")
+    wav_io = BytesIO()
+    audio_segment.export(wav_io, format="wav", codec="pcm_s16le")
+    wav_io.seek(0)  # Reset pointer to beginning
+    return wav_io
