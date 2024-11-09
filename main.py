@@ -15,8 +15,6 @@ PROXY_ENDPOINT=environ.get('PROXY_ENDPOINT')
 CARTESIA_KEY=environ.get('CARTESIA_KEY')
 
 
-if 'persona' not in st.session_state:
-    st.session_state.persona = None
 # Initialize session states
 if 'messages' not in st.session_state:
     st.session_state.messages = []
@@ -28,9 +26,11 @@ if 'names' not in st.session_state:
     for file in listdir('dummy_data'):
         if file != 'persona.mp3':
             name = file[:-4]
+            bio = transcribe(file)
             names[name] = {
                 'embedding': clone_voice(file),
-                'bio': transcribe(file)
+                'bio': bio,
+                'persona': PersonaGPT(bio)
             }
     st.session_state.names = names
 
@@ -43,7 +43,6 @@ if not st.session_state.button_triggered:
     if uploaded_main_recording is not None:
         with open('dummy_data/persona.mp3', 'wb') as f:
             f.write(uploaded_main_recording.getvalue())
-        st.session_state.persona = PersonaGPT(transcribe('persona.mp3'))
 
     st.markdown("<p class='custom-label'>Attach a photo of your room or mood board below</p>", unsafe_allow_html=True)
     upload_supplemental = st.file_uploader("", type=["jpeg", "png"])
@@ -57,6 +56,7 @@ if st.session_state.button_triggered:
     selected_data = st.session_state.names[selected_name]
     embedding = selected_data['embedding']
     bio = selected_data['bio']
+    persona = selected_data['persona']
 
     # Display all previous chat messages
     for message in st.session_state.history.messages:
@@ -68,7 +68,8 @@ if st.session_state.button_triggered:
         st.chat_message('user').markdown(prompt)
         st.session_state.history.add_user_message(prompt)
 
-        response = get_response(st.session_state.persona.gpt_instruction, st.session_state.messages, prompt, st.session_state.persona.frequency_penalty, None)
+        print(persona.gpt_instruction)
+        response = get_response(persona.gpt_instruction, st.session_state.messages, prompt, persona.frequency_penalty, None)
         st.session_state.messages.append((prompt, response))
         
         with st.chat_message('assistant'):
