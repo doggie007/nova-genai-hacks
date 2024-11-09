@@ -1,16 +1,5 @@
 from langchain_openai import ChatOpenAI
 
-CARTESIA_API_KEY="34bccfa1-25f3-4250-b24b-41db9dc48b84"
-TEAM_API_KEY="sk-1-nnzryEbytTnAqTcIyH7Q"
-PROXY_ENDPOINT="https://nova-litellm-proxy.onrender.com"
-
-
-# llm = ChatOpenAI(
-#     openai_api_key="sk-1-nnzryEbytTnAqTcIyH7Q",
-#     openai_api_base="https://nova-litellm-proxy.onrender.com",
-#     model="gpt-4o"
-# )
-#
 # template = """Generate a kids story based on this prompt: {query}"""
 #
 # prompt = template.format(query='My sons dad was in jail. Write a story to make sure he doesnt end like him')

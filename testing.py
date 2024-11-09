@@ -4,17 +4,17 @@ import subprocess
 from cartesia import Cartesia
 from dotenv import load_dotenv
 from colorama import Fore, Back, Style
+import ast
 
 load_dotenv()
 
 from openai import OpenAI
 client = OpenAI(api_key=os.getenv("TEAM_API_KEY"), base_url=os.getenv("PROXY_ENDPOINT"))
 
-DEBUG = True
-
 from collections import Counter
 import re
 
+DEBUG = True
 
 def estimate_frequency_penalty(transcript):
     # Clean the transcript by removing non-alphanumeric characters and converting to lowercase
@@ -55,7 +55,7 @@ def get_response(instructions, previous_questions_and_answers, new_question, fre
         { "role": "system", "content": instructions },
     ]
 
-    TEMPERATURE = 0.8
+    TEMPERATURE = 0.5
     MAX_TOKENS = 300
     FREQUENCY_PENALTY = freq_pen
     PRESENCE_PENALTY = 1.0
@@ -172,42 +172,41 @@ def create_instruction(input_bio):
 
 
 
-
-
-def main():
-    person1 = PersonaGPT(example_input_bio_1)
-    person2 = PersonaGPT(example_input_bio_2)
-
+def get_compatibility(input_bio_1, input_bio_2, MAX_CONVO_LENGTH=10):
     # We count a convo as person1 speaking
-    MAX_CONVO_LENGTH = 20
+
+    person1 = PersonaGPT(input_bio_1)
+    person2 = PersonaGPT(input_bio_2)
+
     # To start off the chain reaction
     latest_question = "Say hi and say your name and ask for the other person's name."
 
     # Keep track of previous questions and answers ie. chat_history
-    previous_questions_and_answers = []
+    previous_questions_and_answers_person_1 = []
+    previous_questions_and_answers_person_2 = []
 
     # Record conversation to put to evaluation
     recorded_conversation = []
 
     for _ in range(MAX_CONVO_LENGTH):
         # Person 1 responds to last question
-        response1 = get_response(person1.gpt_instruction, previous_questions_and_answers, latest_question, person1.frequency_penalty)
+        response1 = get_response(person1.gpt_instruction, previous_questions_and_answers_person_1, latest_question, person1.frequency_penalty)
 
         if DEBUG: print(Fore.CYAN + Style.BRIGHT + "Person 1 message: " + Style.NORMAL + response1)
 
 
         # Add the new question and answer to the list of previous questions and answers
-        previous_questions_and_answers.append((latest_question, response1))
+        previous_questions_and_answers_person_1.append((latest_question, response1))
 
         # Latest question is the response of the 1st person
         latest_question = response1
 
         # Person 2 responds to last question
-        response2 = get_response(person2.gpt_instruction, previous_questions_and_answers, latest_question, person2.frequency_penalty)
+        response2 = get_response(person2.gpt_instruction, previous_questions_and_answers_person_2, latest_question, person2.frequency_penalty)
         if DEBUG: print(Fore.CYAN + Style.BRIGHT + "Person 2 message: " + Style.NORMAL + response2)
 
         # Add the new question and answer to the list of previous questions and answers
-        previous_questions_and_answers.append((latest_question, response2))
+        previous_questions_and_answers_person_2.append((latest_question, response2))
 
         # Latest question is the response of the 2nd person
         latest_question = response2
@@ -217,15 +216,17 @@ def main():
 
     full_conversation = "\n".join(recorded_conversation)
 
-    judge_response = get_response(full_conversation+"""Evaluate the conversation: how compatible are these 2 people? Highlight any potential issues that if they were roommates would arise.""",
-                 [], "Give a number from 0.0 to 1.0 scale where 0 is very bad compatibility and 1.0 is full compatibility. Return it as a tuple where tuple[0] is the string describing potential issues, and tuple[1] is a float for the number", 1.0)
+    judge_response = get_response(full_conversation+"""Evaluate the conversation: how compatible are these 2 people? Highlight any potential issues that if they were roommates would arise. Be quite harsh and definitely highlight any red flags. It is okay to give very low scores.""",
+                 [], "Return it as just a tuple that can be parsed by ast in python where tuple[0] is the string describing potential issues, and tuple[1] is a float for the number from 0 to 100 scale where 0 is very bad compatibility and 100 is full compatibility.", 1.0)
 
+    parsed_judge_response, judge_score = ast.literal_eval(judge_response)
 
-    # number = get_response("",
-    #              [], judge_response+"\n Extract the number for compatibility only. ie. only output something like 0.1 or 0.5. Do not add any text, just the number so we can parse it in python.")
+    if DEBUG: print(parsed_judge_response, judge_score)
 
-    print(judge_response)
-    # print(f"Number is {number}")
+    return parsed_judge_response, float(judge_score)
+
+def main():
+    get_compatibility(example_input_bio_1, example_input_bio_bad)
 
 
 if __name__ == "__main__":
