@@ -1,5 +1,5 @@
 from langchain_openai import ChatOpenAI
-
+import streamlit as st
 
 llm = ChatOpenAI(
     openai_api_key="sk-1-nnzryEbytTnAqTcIyH7Q", 
@@ -13,4 +13,5 @@ prompt = template.format(query='My sons dad was in jail. Write a story to make s
 
 response = llm.invoke(prompt)
 
-print(response.content)
+st.write("Roommate Matching")
+st.write(response.content)
