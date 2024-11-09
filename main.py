@@ -33,13 +33,12 @@ llm = ChatOpenAI(
     model="gpt-4o"
 )
 
-# Roommate Matching initial screen
 if not st.session_state.button_triggered:
     st.title("Roommate Matching")
     st.write("Looking for a roommate? Our platform helps match you with compatible living partners based on your bio, lifestyle preferences, and room photos.")
     
     st.markdown("<p class='custom-label'>Record a 20-30 second bio about yourself and attach it below</p>", unsafe_allow_html=True)
-    uploaded_main_recording = st.file_uploader("", type=["mp3"])
+    uploaded_main_recording = st.audio_input('Start recording')
 
     st.markdown("<p class='custom-label'>Attach a photo of your room or mood board below</p>", unsafe_allow_html=True)
     upload_supplemental = st.file_uploader("", type=["jpeg", "png"])
@@ -58,11 +57,11 @@ if st.session_state.button_triggered:
         st.chat_message('user').markdown(prompt)
         st.session_state.messages.add_user_message(prompt)
 
-        #response = llm.invoke(prompt).content
-        audio_bytes = speak(embedding, 'Yeah my name is Jose, how are you doing today?? Id love to room with you')
+        response = llm.invoke(prompt).content
+        audio_bytes = speak(embedding, response)
 
         with st.chat_message('assistant'):
             st.audio(audio_bytes, format="audio/wav", autoplay=True) 
         
-        #st.session_state.messages.add_ai_message(response)
+        st.session_state.messages.add_ai_message(response)
         sleep(0.5)
