@@ -1,9 +1,13 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 from langchain_openai import ChatOpenAI
+from os import environ
 
 
 llm = ChatOpenAI(
-    openai_api_key="sk-1-nnzryEbytTnAqTcIyH7Q", 
-    openai_api_base="https://nova-litellm-proxy.onrender.com",
+    openai_api_key=environ.get('API_KEY'), 
+    openai_api_base=environ.get('API_BASE'),
     model="gpt-4o"
 )
 
